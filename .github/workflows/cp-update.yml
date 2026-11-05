@@ -16,7 +16,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: grafana/plugin-actions/create-plugin-update@create-plugin-update/v2.0.2
+      - uses: grafana/plugin-actions/create-plugin-update@create-plugin-update/v2.1.1
         with:
           token: ${{ secrets.GH_PAT_TOKEN || github.token }}
           node-version: '22'
