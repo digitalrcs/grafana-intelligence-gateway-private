@@ -5,7 +5,7 @@ import { format } from 'prettier';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const csvPath = path.join(root, 'testdata', 'reviewer-traffic.csv');
-const dashboardPath = path.join(root, 'provisioning', 'dashboards', 'dashboard.json');
+const dashboardPath = path.join(root, 'tests', 'fixtures', 'dashboard.json');
 const csvContent = (await readFile(csvPath, 'utf8')).trim();
 const lines = csvContent.split(/\r?\n/);
 
@@ -29,7 +29,7 @@ const grafanaCsvContent = [
 const dashboard = JSON.parse(await readFile(dashboardPath, 'utf8'));
 const sourcePanel = dashboard.panels.find((panel) => panel.id === 1);
 if (!sourcePanel?.targets?.[0]) {
-  throw new Error('The provisioned CSV source panel (panel 1) is missing.');
+  throw new Error('The browser-test CSV source panel (panel 1) is missing.');
 }
 
 sourcePanel.targets[0].csvContent = grafanaCsvContent;

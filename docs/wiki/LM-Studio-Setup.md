@@ -1,4 +1,4 @@
-> Private internal edition. Current development version: 1.2.0-private.1. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
+> Private internal edition. Current development version: 1.2.0-private.2. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
 
 # LM Studio Setup
 
@@ -28,4 +28,4 @@ Choose the evidence in the panel:
 - **Images only:** no query results required; turn **Include query data with images** off, preview captures or uploads, then select **Use images → Analyze images**.
 - **Data and images:** connect query results, leave **Include query data with images** on, preview the images, and explicitly select **Analyze images**.
 
-Use a synthetic image with known visual facts to verify the response. A model-list request, successful text completion, or mock receipt is not a vision test. See [Image Analysis](Image-Analysis.md) and [LM Studio's OpenAI-compatible API documentation](https://lmstudio.ai/docs/developer/openai-compat).
+Use a synthetic image with known visual facts to verify the response. A model-list request, successful text completion, or automated test response is not a vision test. See [Image Analysis](Image-Analysis.md) and [LM Studio's OpenAI-compatible API documentation](https://lmstudio.ai/docs/developer/openai-compat).

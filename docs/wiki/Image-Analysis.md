@@ -1,4 +1,4 @@
-> Private internal edition. Current development version: 1.2.0-private.1. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
+> Private internal edition. Current development version: 1.2.0-private.2. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
 
 # Image Analysis
 
@@ -12,7 +12,7 @@ Use dashboard captures or uploaded images as evidence for an Intelligence Gatewa
 | Images only     | No query results or Dashboard source required.            | Turn **Include query data with images** off; preview images, select **Use images**, then **Analyze images**. |
 | Data and images | Connect the query results needed for precise values.      | Leave **Include query data with images** on; preview images, select **Use images**, then **Analyze images**. |
 
-Every mode requires **AI provider → Secure AI data source**. This setting selects the model connection and is separate from **Queries → Dashboard**, which shares measurements. Attaching images permits an images-only assessment even when **When no data arrives** is set to **Block**.
+Every mode requires **1. Connect AI → Secure AI data source**. This setting selects the model connection and is separate from **Queries → Dashboard**, which shares measurements. Attaching images permits an images-only assessment even when **When no data arrives** is set to **Block**.
 
 ## Capture, preview, and send
 
@@ -23,9 +23,9 @@ Every mode requires **AI provider → Secure AI data source**. This setting sele
 5. Select **Use images**. This closes the preview without sending anything.
 6. Select **Analyze images** to submit the prepared images and prompt through the configured secure AI data source.
 
-**Remove** discards one attachment; **Remove all images** discards all staged images. **Clear analysis** cancels an active request and removes the assessment, errors, and pending images, leaving measurements unchanged. Successful image assessments release their attachments; capture or attach again for another image assessment.
+**Remove** discards one attachment; **Remove all images** discards all staged images. **Clear analysis** cancels an active request and removes the assessment, errors, and pending images, leaving measurements unchanged. Successful image assessments clear the pending attachment tray. The submitted images remain only in the frozen in-memory snapshot for explicit follow-ups; those requests resend the originals without recapture or new query data. Clear analysis, replacement, navigation/unmount or a provider/model change discards that snapshot.
 
-Auto-analysis never sends images and pauses while attachments or the image dialog are active. Images remain in browser memory, not dashboard JSON or persistent browser storage. Clearing cannot retract content already sent to a provider.
+Auto-analysis never sends images and pauses while attachments or the image dialog are active. Pending images and frozen snapshot images remain in browser memory, not dashboard JSON or persistent browser storage. Clearing cannot retract content already sent to a provider.
 
 ## Capture boundaries
 
@@ -38,7 +38,7 @@ Capturing another panel provides its image, not its underlying DataFrames. Use G
 - Turn on **Enable image analysis** (`enableVision`, off by default) in the companion. Add the approved vision-capable model to both the normal model allow-list and **Allowed vision models** (`allowedVisionModels`). An enabled configuration with an empty vision list is rejected. Discovery and allow-list membership do not make a text-only model vision-capable.
 - OpenAI, LM Studio, Open WebUI, custom OpenAI-compatible Chat Completions, and the optional Grafana LLM app support structured image requests through their adapters. Actual model and parameter compatibility must be checked. Use the [provider guide](Configuration-AI-Providers.md) and perform an approved real-provider test with known visual facts.
 - The Grafana LLM option uses a dedicated Grafana service-account token in `secureJsonData.bearerToken`, not the user's SSO session. Its `base`/`large` aliases are configured in `grafana-llm-app`. App 1.2.0 requires Grafana 13 and has a two-minute upstream timeout.
-- Copilot Studio has a **Direct Line preview adapter** with server-side `secureJsonData.directLineSecret`, isolated conversations, bounded reply polling, and multipart image uploads. It is not corporate SSO, delegated Entra authentication, or app-only Direct-to-Engine access. See [Copilot Studio Notes](Copilot-Studio-Notes.md) for completion-contract and tenant prerequisites. Never disable agent authentication to make it work; mock tests are not live tenant validation.
+- Copilot Studio has a **Direct Line preview adapter** with server-side `secureJsonData.directLineSecret`, isolated conversations, bounded reply polling, and multipart image uploads. It is not corporate SSO, delegated Entra authentication, or app-only Direct-to-Engine access. See [Copilot Studio Notes](Copilot-Studio-Notes.md) for completion-contract and tenant prerequisites. Never disable agent authentication to make it work; protocol tests are not live tenant validation.
 - Limits: 8 images; 4 MiB decoded file size per image; 12 MiB combined; 4,096 pixels per side; 16 million pixels per image and 32 million combined; 18 MiB image-request JSON with non-image content still limited to 1 MiB. PNG/JPEG only. Providers can impose lower limits.
 - Uploads are rasterized to remove embedded metadata such as EXIF/GPS; JPEGs may be re-encoded. Sensitive content visible in the pixels is not automatically redacted.
 - Use synthetic or approved non-sensitive images. Dashboard viewing rights do not automatically permit sending screenshots to an AI provider. Provider retention policies apply after submission.
@@ -58,3 +58,11 @@ See the [complete image-analysis guide](https://github.com/digitalrcs/grafana-in
 Use panel 1.1.2 or later for tall-dashboard capture on Grafana 12.4.0. Companion 1.1.0 or later remains compatible. Stalled scrolling now reports an error; review any partial-capture warnings caused by image limits. Updating the separate exporter does not update this capture implementation.
 
 Active capture survives temporary panel unmounting during dashboard scrolling (including Grafana 12.2). Navigation or a provider/model change cancels the capture. An unclaimed result is discarded five seconds after capture finishes; active sessions have a 70-second outer cleanup limit. Images remain only in browser memory and still require explicit review and submission.
+
+## Frozen evidence, freshness and sharing
+
+After a successful image assessment, the original prompt, selected query evidence and submitted images form an in-memory snapshot. Explicit follow-ups reuse that evidence, even if Grafana independently refreshes the dashboard; they do not recapture images or query historical data. Each follow-up sends the original images again to the configured provider, so provider limits and retention policies still apply.
+
+Evidence details and exported briefs identify the submitted images and their capture/upload metadata. Statistics are computed from supplied query values, not image pixels. Query/time/settings changes and newly prepared images can mark the assessment out of date. A capture alone cannot detect every later pixel change in another panel; recapture and select **Analyze images** for an updated visual assessment. **Analyze latest data** starts a fresh assessment using current data and any currently prepared attachments; prepare a new capture first for updated visual evidence. It never silently recaptures the dashboard.
+
+Incident briefs exclude raw query evidence and image bytes by default. Enable each separately only when appropriate for the destination; exported files and clipboard contents are user-managed copies. Clear analysis cannot retract those copies or content already sent to the provider. See [Panel setup](Panel-Setup-and-Configuration.md) for the full workflow.

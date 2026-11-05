@@ -1,4 +1,4 @@
-> Private internal edition. Current development version: 1.2.0-private.1. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
+> Private internal edition. Current development version: 1.2.0-private.2. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
 
 # Secure Backend and Secret Storage
 
@@ -135,4 +135,4 @@ The shortest panel, backend, reverse-proxy, and provider timeout can terminate a
 
 ## Integrated Docker test
 
-The panel repository's Docker Compose environment mounts both sibling `dist` directories and provisions the secure instance plus a dashboard already configured with UID `intelligence-gateway-secure`. Build both plugins, start the panel Compose project, and open <http://localhost:3004>. The default deterministic mock requires no credential or `OPENAI_API_KEY` and performs no AI inference. To test a real provider, follow the [Reviewer Walkthrough](Reviewer-Walkthrough.md); configure a server-side API key only when the selected provider requires one, such as OpenAI.
+The panel repository's Docker Compose environment mounts both sibling `dist` directories and supplies an unconfigured starter dashboard on <http://localhost:3004>. Configure a real Secure AI instance and choose its model or agent alias in the panel. Credentials belong in the companion's secure fields and are required only where the provider requires them. No AI server or default model is bundled. Follow the [Reviewer Walkthrough](Reviewer-Walkthrough.md).

@@ -1,6 +1,6 @@
 # Private signing and deployment
 
-Status: private development version 1.2.0-private.1; no private signed archive or Grafana approval yet. Do not use historical public ZIPs, SHA1 values or Community signatures as evidence for this edition.
+Status: private development version 1.2.0-private.2; no private signed archive or Grafana approval yet. Do not use historical public ZIPs, SHA1 values or Community signatures as evidence for this edition.
 
 1. Agree with Grafana on the signing organization and eligibility for the intended internal deployment. Confirm whether the retained plugin ID can use the requested private signature; do not assume public catalog approval transfers.
 2. Record the exact target Grafana `root_url` values, including subpaths. Keep target-specific values and tokens out of source control.

@@ -1,4 +1,4 @@
-# Private internal edition — 1.2.0-private.1 (unreleased)
+# Private internal edition — 1.2.0-private.2 (unreleased)
 
 This project retains the full 1.1.2 feature set, including dashboard capture, selected-panel capture, PNG/JPEG uploads and query-data analysis. The private Docker validation added a bounded quiet-window and paint wait before capture to reduce intermittent blank content after scrolling.
 The independent public project is C:\Data\GrafanaAIPluginPublic\digitalrcs-intelligencegateway-panel. Do not use this folder for public catalog changes.
@@ -11,6 +11,10 @@ Private signing requires GRAFANA_ACCESS_POLICY_TOKEN (plugins:write) and GRAFANA
 Private signatures are restricted to those URLs and are not public catalog certification. Confirm eligibility with Grafana for any customer deployment; this edition is intended only for internal use.
 
 Both editions keep the existing plugin ID so dashboards remain compatible. Install one edition per Grafana instance, replace the whole plugin directory, and restart Grafana. Do not mix files or manifests across editions. The localhost Docker demo now runs this private edition; see VALIDATION.md for runtime evidence.
+
+## Analysis workflow
+
+The private edition includes evidence/freshness details, analysis presets, calculated sample statistics, incident-brief export, supplied-query baseline comparisons and frozen data/image follow-ups. New panels require a configured real AI instance and model. No mock AI server or canned-response provider is bundled; automated tests retain isolated test doubles. See [Panel setup](docs/SETUP.md). These changes do not alter the private capture/distribution boundary.
 
 ## Behavior and validation
 
