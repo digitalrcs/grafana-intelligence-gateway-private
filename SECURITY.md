@@ -2,6 +2,8 @@
 
 ## Reporting
 
+The source repository and wiki are publicly readable. Private refers to Grafana signing and distribution, not confidentiality of files stored here. Use only synthetic or explicitly approved public examples.
+
 Please report suspected vulnerabilities privately through GitHub Security Advisories for the DigitalRCS repository. Do not open a public issue containing credentials, exploitable dashboard content, or endpoint details.
 
 ## Credential storage

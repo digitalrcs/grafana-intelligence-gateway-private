@@ -63,17 +63,18 @@ In Grafana 13.1.1, the [plugin loader](https://github.com/grafana/grafana/blob/v
 
 ## Signing and releases
 
-CI builds, tests, packages, and validates metadata. Signing runs when `GRAFANA_ACCESS_POLICY_TOKEN` is configured. The tagged release workflow uses `grafana/plugin-actions/build-plugin` and generates GitHub build-provenance attestation.
+CI builds, tests, packages, and validates metadata. It does not sign or publish this edition. There is no tagged public release workflow. Source and wiki are public; Grafana distribution is private and requires a separately prepared target-scoped release.
 
 For private signing:
 
 ```bash
-export GRAFANA_ACCESS_POLICY_TOKEN="..."
+# Supply GRAFANA_ACCESS_POLICY_TOKEN securely; never store it in this repository.
+export GRAFANA_PRIVATE_ROOT_URLS="https://grafana.example.com/"
 npm run build
-npm run sign -- --rootUrls https://grafana.example.com/
+npm run sign
 ```
 
-For catalog publication, see [Compatibility and Certification](CERTIFICATION.md) and the existing [submission handoff](GRAFANA_SUBMISSION.md). Keep source tags and release artifacts immutable. A catalog README change must be included in a newly packaged submission; changing GitHub's README alone does not update the catalog.
+Follow [Private signing and deployment](PRIVATE_RELEASE.md). Keep source tags and signed release artifacts immutable. This edition is not intended for the public Grafana catalog; that separate edition removes cross-panel DOM capture. Source publication does not establish private signing or deployment approval.
 
 The [reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-gateway-private/wiki/Reviewer-Walkthrough) and [live evidence](LIVE_REVIEW_EVIDENCE.md) describe the synthetic scenario, deterministic mock, and real-provider checks.
 
@@ -88,7 +89,7 @@ The [reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-ga
 - `src/module.ts`: panel option registration.
 - `provisioning/dashboards/dashboard.json`: local development dashboard.
 - `examples/dashboard.json`: importable configuration example.
-- `wiki/`: source for the published GitHub Wiki.
+- `docs/wiki/`: versioned source for the GitHub Wiki.
 
 See [Contributing](../CONTRIBUTING.md) and [Security](../SECURITY.md).
 
