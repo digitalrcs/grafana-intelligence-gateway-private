@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { getDataSourceSrv } from '@grafana/runtime';
 import { ConnectionNotice } from './ConnectionNotice';
-jest.mock('@grafana/runtime', () => ({ getDataSourceSrv: jest.fn(), config: { appSubUrl: '/grafana' } }));
+jest.mock('@grafana/runtime', () => ({ getDataSourceSrv: jest.fn() }));
 const getInstanceSettings = jest.fn();
 const initializeDataSource = jest.fn();
 beforeEach(() => {
@@ -20,15 +20,21 @@ test('shows the selected connection and model without calling a provider', () =>
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   expect(initializeDataSource).not.toHaveBeenCalled();
 });
-test('guides setup without assuming a provider and respects the Grafana subpath', () => {
-  render(<ConnectionNotice dataSourceUid="" model="" />);
-  expect(screen.getByText('Connect your AI backend')).toBeVisible();
-  expect(screen.getByRole('link', { name: 'Add AI connection' })).toHaveAttribute(
-    'href',
-    '/grafana/connections/datasources/new'
-  );
-  expect(getInstanceSettings).not.toHaveBeenCalled();
+test.each(['/', '/grafana/'])('guides setup using the Grafana base URL %s', (basePath) => {
+  const base = document.createElement('base');
+  base.href = basePath;
+  document.head.appendChild(base);
+  try {
+    render(<ConnectionNotice dataSourceUid="" model="" />);
+    expect(screen.getByText('Connect your AI backend')).toBeVisible();
+    const link = screen.getByRole('link', { name: 'Add AI connection' }) as HTMLAnchorElement;
+    expect(new URL(link.href).pathname).toBe(`${basePath}connections/datasources/new`);
+    expect(getInstanceSettings).not.toHaveBeenCalled();
+  } finally {
+    base.remove();
+  }
 });
+
 test('requires a model or agent alias after choosing a data source', () => {
   render(<ConnectionNotice dataSourceUid="local-ai" model="" />);
   expect(screen.getByText('Choose a model or Copilot agent')).toBeVisible();

@@ -21,6 +21,12 @@ test('fresh installation requires an AI connection and has no demo provider', as
     await expect(panel.getByRole('button', { name: 'Analyze', exact: true })).toBeDisabled();
     await expect(panel).not.toContainText(/mock|receipt/i);
     await expect(panel.getByRole('link', { name: 'Add AI connection' })).toBeVisible();
+    const setupUrl = new URL(page.url());
+    setupUrl.pathname = setupUrl.pathname.split('/d/')[0] + '/connections/datasources/new';
+    setupUrl.search = '';
+    setupUrl.hash = '';
+    await expect(panel.getByRole('link', { name: 'Add AI connection' })).toHaveJSProperty('href', setupUrl.toString());
+
     if (process.env.VISION_EVIDENCE_DIR) {
       await page.screenshot({
         path: path.join(process.env.VISION_EVIDENCE_DIR, 'clean-setup.png'),

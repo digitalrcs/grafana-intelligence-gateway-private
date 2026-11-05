@@ -36,7 +36,7 @@ type VisionDashboard = Dashboard & {
   panels: Array<{ type: string; title: string; options?: { secureDataSourceUid?: string } }>;
 };
 
-type MissingConfigProbe = { kind: 'public-dashboard' } | { kind: 'saved-queries'; resourceName: string };
+type MissingConfigProbe = { kind: 'public-dashboard' } | { kind: 'user-storage'; resourceName: string };
 type CoreDiagnostic = {
   message: string;
   source: string;
@@ -56,9 +56,9 @@ function missingConfigProbe(source: string, origin: string, method: string, stat
       return { kind: 'public-dashboard' };
     }
     const storage = decodeURIComponent(url.pathname).match(
-      /^\/apis\/userstorage\.grafana\.app\/v0alpha1\/namespaces\/default\/user-storage\/(saved-queries:[A-Za-z0-9_-]+)$/
+      /^\/apis\/userstorage\.grafana\.app\/v0alpha1\/namespaces\/default\/user-storage\/((?:saved-queries|grafana-page-history):[A-Za-z0-9_-]+)$/
     );
-    return storage ? { kind: 'saved-queries', resourceName: storage[1] } : null;
+    return storage ? { kind: 'user-storage', resourceName: storage[1] } : null;
   } catch {
     return null;
   }
@@ -74,8 +74,9 @@ function isDocumentedMissingConfig(probe: MissingConfigProbe, body: unknown): bo
   if (probe.kind === 'public-dashboard') {
     return value.statusCode === 404 && value.messageId === 'publicdashboards.notFound';
   }
-  // UserStorage.init treats a missing per-user configuration as an empty store:
-  // https://github.com/grafana/grafana/blob/v13.2.4/packages/grafana-runtime/src/utils/userStorage.tsx
+  // UserStorage.fetchResource returns null on 404; init/getItem use an empty store
+  // or local fallback for these optional saved-query and page-history settings.
+  // https://github.com/grafana/grafana/blob/v13.3.0/packages/grafana-runtime/src/utils/userStorage.tsx
   const details = value.details as Record<string, unknown> | undefined;
   return (
     value.kind === 'Status' &&
@@ -210,6 +211,7 @@ test('optional host configuration diagnostics require an exact origin, request, 
   const publicPath = '/api/dashboards/uid/synthetic-dashboard/public-dashboards';
   const storagePath =
     '/apis/userstorage.grafana.app/v0alpha1/namespaces/default/user-storage/saved-queries:synthetic-user';
+  const historyPath = storagePath.replace('saved-queries:', 'grafana-page-history:');
   const publicBody = { statusCode: 404, messageId: 'publicdashboards.notFound' };
   const storageBody = {
     kind: 'Status',
@@ -219,9 +221,14 @@ test('optional host configuration diagnostics require an exact origin, request, 
     reason: 'NotFound',
     details: { name: 'saved-queries:synthetic-user', group: 'userstorage.grafana.app', kind: 'user-storage' },
   };
+  const historyBody = {
+    ...storageBody,
+    details: { ...storageBody.details, name: 'grafana-page-history:synthetic-user' },
+  };
   for (const [pathname, body] of [
     [publicPath, publicBody],
     [storagePath, storageBody],
+    [historyPath, historyBody],
   ] as const) {
     const source = `${origin}${pathname}`;
     const probe = missingConfigProbe(source, origin, 'GET', 404)!;
@@ -234,6 +241,10 @@ test('optional host configuration diagnostics require an exact origin, request, 
     expect(missingConfigProbe(source, 'https://other.example.test', 'GET', 404)).toBeNull();
     expect(missingConfigProbe(`${source}?unexpected=true`, origin, 'GET', 404)).toBeNull();
   }
+  const history = missingConfigProbe(`${origin}${historyPath}`, origin, 'GET', 404)!;
+  expect(isDocumentedMissingConfig(history, storageBody)).toBe(false);
+  expect(isDocumentedMissingConfig(history, { ...historyBody, reason: 'Forbidden' })).toBe(false);
+  expect(isDocumentedMissingConfig(history, { ...historyBody, code: 500 })).toBe(false);
   const storage = missingConfigProbe(`${origin}${storagePath}`, origin, 'GET', 404)!;
   expect(
     isDocumentedMissingConfig(storage, { ...storageBody, details: { ...storageBody.details, name: 'other' } })
@@ -242,6 +253,8 @@ test('optional host configuration diagnostics require an exact origin, request, 
     '/api/plugins/grafana-assistant-app/resources/api/v1/ofrep/v1/evaluate/flags',
     '/api/datasources/uid/secure-ai/resources/chat/completions',
     storagePath.replace('saved-queries:', 'other-service:'),
+    historyPath.replace('grafana-page-history:', 'grafana-page-history-extra:'),
+    historyPath.replace('/namespaces/default/', '/namespaces/other/'),
     publicPath.replace('/public-dashboards', ''),
   ]) {
     expect(missingConfigProbe(`${origin}${pathname}`, origin, 'GET', 404)).toBeNull();

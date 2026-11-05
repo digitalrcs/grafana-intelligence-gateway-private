@@ -1,7 +1,7 @@
 import React from 'react';
 import { css } from '@emotion/css';
 import { DataSourceInstanceSettings } from '@grafana/data';
-import { getDataSourceSrv, config } from '@grafana/runtime';
+import { getDataSourceSrv } from '@grafana/runtime';
 import { useTheme2 } from '@grafana/ui';
 
 export const ConnectionNotice = ({ dataSourceUid, model }: { dataSourceUid: string; model: string }) => {
@@ -43,7 +43,8 @@ export const ConnectionNotice = ({ dataSourceUid, model }: { dataSourceUid: stri
             Setup guide
           </a>
           {' · '}
-          <a href={(config.appSubUrl || '') + '/connections/datasources/new'} target="_blank" rel="noopener noreferrer">
+          {/* Grafana sets the document base URL, including any configured subpath. */}
+          <a href="connections/datasources/new" target="_blank" rel="noopener noreferrer">
             Add AI connection
           </a>
         </div>
