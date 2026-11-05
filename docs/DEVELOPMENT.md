@@ -1,6 +1,6 @@
 # Development and local setup
 
-This guide covers the development environment and release workflow. For product setup, see the [user documentation](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki).
+This guide covers the development environment and release workflow. For product setup, see the [user documentation](https://github.com/digitalrcs/grafana-intelligence-gateway-private/wiki).
 
 ## Requirements
 
@@ -27,7 +27,7 @@ In a second terminal:
 docker compose up
 ```
 
-Open <http://localhost:3004>. Compose mounts both plugins, provisions **DEMO ONLY - Mock AI (no inference)** and a sample dashboard, and starts a credential-free mock provider. This supplied default returns a fixed connectivity receipt: no model runs and no data or image analysis occurs. The dashboard introduction describes the supplied default; read the analysis panel's current AI connection label after changing providers. Follow the [two-phase quickstart](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough#phase-2-connect-a-real-provider) to create a separate real-provider instance. Keep the mock for automated tests.
+Open <http://localhost:3004>. Compose mounts both plugins, provisions **DEMO ONLY - Mock AI (no inference)** and a sample dashboard, and starts a credential-free mock provider. This supplied default returns a fixed connectivity receipt: no model runs and no data or image analysis occurs. The dashboard introduction describes the supplied default; read the analysis panel's current AI connection label after changing providers. Follow the [two-phase quickstart](https://github.com/digitalrcs/grafana-intelligence-gateway-private/wiki/Reviewer-Walkthrough#phase-2-connect-a-real-provider) to create a separate real-provider instance. Keep the mock for automated tests.
 
 The development container enables anonymous Admin access. Do not use that configuration for a production deployment.
 
@@ -75,7 +75,7 @@ npm run sign -- --rootUrls https://grafana.example.com/
 
 For catalog publication, see [Compatibility and Certification](CERTIFICATION.md) and the existing [submission handoff](GRAFANA_SUBMISSION.md). Keep source tags and release artifacts immutable. A catalog README change must be included in a newly packaged submission; changing GitHub's README alone does not update the catalog.
 
-The [reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-gateway/wiki/Reviewer-Walkthrough) and [live evidence](LIVE_REVIEW_EVIDENCE.md) describe the synthetic scenario, deterministic mock, and real-provider checks.
+The [reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-gateway-private/wiki/Reviewer-Walkthrough) and [live evidence](LIVE_REVIEW_EVIDENCE.md) describe the synthetic scenario, deterministic mock, and real-provider checks.
 
 ## Source map
 

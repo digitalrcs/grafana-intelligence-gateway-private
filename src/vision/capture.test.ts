@@ -7,6 +7,8 @@ import { toBlob } from 'html-to-image';
 
 jest.mock('@grafana/runtime', () => ({ getPanelScreenshotService: jest.fn() }));
 jest.mock('html-to-image', () => ({ toBlob: jest.fn() }));
+// Quiet-window timing and cancellation are exercised independently in readiness.test.ts.
+jest.mock('./readiness', () => ({ waitForPanelPaint: jest.fn().mockResolvedValue(undefined) }));
 jest.mock('./images', () => ({
   attachmentFromBlob: jest.fn(),
   dataUrlToBlob: jest.fn(),

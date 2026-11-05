@@ -1,8 +1,8 @@
 {
   "name": "digitalrcs-intelligencegateway-panel",
-  "version": "1.1.2",
+  "version": "1.2.0-private.1",
   "scripts": {
-    "build": "webpack -c ./webpack.config.ts --env production --no-cache",
+    "build": "node scripts/check-edition.mjs && webpack -c ./webpack.config.ts --env production --no-cache",
     "dev": "webpack -w -c ./webpack.config.ts --env development",
     "test": "jest --watch --onlyChanged",
     "test:ci": "jest --passWithNoTests --maxWorkers 4",
@@ -12,17 +12,13 @@
     "lint:fix": "npm run lint -- --fix && prettier --write --list-different .",
     "e2e": "playwright test",
     "server": "docker compose up --build",
-    "sign": "sign-plugin"
+    "sign": "node scripts/sign-private.mjs",
+    "check:edition": "node scripts/check-edition.mjs",
+    "prebuild": "npm run check:edition",
+    "presign": "npm run check:edition"
   },
   "author": "DigitalRCS",
-  "homepage": "https://www.digitalrcs.com",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/DigitalRCS/grafana-intelligence-gateway.git"
-  },
-  "bugs": {
-    "url": "https://github.com/DigitalRCS/grafana-intelligence-gateway/issues"
-  },
+  "homepage": "https://github.com/digitalrcs/grafana-intelligence-gateway-private#readme",
   "license": "Apache-2.0",
   "devDependencies": {
     "@grafana/eslint-config": "^9.0.0",
@@ -95,5 +91,13 @@
     "@grafana/data": {
       "moment": "2.31.0"
     }
+  },
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digitalrcs/grafana-intelligence-gateway-private.git"
+  },
+  "bugs": {
+    "url": "https://github.com/digitalrcs/grafana-intelligence-gateway-private/issues"
   }
 }

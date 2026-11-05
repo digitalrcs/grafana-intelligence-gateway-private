@@ -1,3 +1,5 @@
+> Historical public-edition record. This is not a private release or current deployment instruction. See [Private release](PRIVATE_RELEASE.md).
+
 # Grafana Intelligence Gateway 1.1.0
 
 Version 1.1.0 adds reviewed image evidence to the Intelligence Gateway panel and expands provider choices through the required secure companion. Existing data-only assessments remain available.

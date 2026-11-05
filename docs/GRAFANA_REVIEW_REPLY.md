@@ -1,3 +1,5 @@
+> Historical public-edition record. This is not a private release or current deployment instruction. See [Private release](PRIVATE_RELEASE.md).
+
 # Draft reply to Grafana review
 
 Review and send this message manually. It has not been sent on your behalf.

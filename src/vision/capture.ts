@@ -12,6 +12,7 @@ import {
 import { attachmentFromBlob, dataUrlToBlob, decodeImage, encodeCanvas } from './images';
 import { boundedGeometry, throwIfAborted, validateVisionAttachments, VISION_LIMITS, waitForAbortable } from './limits';
 import type { CapturePanel, VisionAttachment, VisionCaptureResult, VisionProgressHandler } from './types';
+import { waitForPanelPaint } from './readiness';
 
 const MAX_CAPTURE_MS = 60_000;
 const MAX_SCROLL_STEPS = 40;
@@ -256,6 +257,7 @@ async function runCapture(
           if (!fresh) {
             throw new Error('the panel was unmounted before capture');
           }
+          await waitForPanelPaint(fresh, signal);
           onProgress?.(`Capturing ${fresh.title}…`);
           const attachment = await attachmentFromBlob(
             await capturePanelBlob(fresh, signal),

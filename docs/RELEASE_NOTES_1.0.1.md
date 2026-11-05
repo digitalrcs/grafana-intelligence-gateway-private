@@ -1,3 +1,5 @@
+> Historical public-edition record. This is not a private release or current deployment instruction. See [Private release](PRIVATE_RELEASE.md).
+
 # Grafana Intelligence Gateway 1.0.1
 
 This maintenance release improves the catalog description and setup guidance for analyzing panel query data with local or hosted AI models.

@@ -1,3 +1,9 @@
+# Private edition split (unreleased)
+
+- Wait for a quiet render interval and two paint frames before capturing scrolled panels; abort and time bounds remain enforced.
+
+Separate full-featured internal edition from the public catalog project. Preserve capture behavior; require URL-restricted private signing and remove public release automation.
+
 # Changelog
 
 ## 1.1.2 - 2026-10-30

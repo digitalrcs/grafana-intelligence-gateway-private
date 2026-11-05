@@ -1,3 +1,5 @@
+> Historical public-edition record. This is not a private release or current deployment instruction. See [Private release](PRIVATE_RELEASE.md).
+
 # Intelligence Gateway 1.1.2
 
 Fixes tall-dashboard image capture on Grafana 12.4.0 by selecting the actual document scroller. Stalled scrolling now stops capture with an explicit error. Existing image limits, gateway-panel exclusion, preview review, and explicit image submission remain in place.

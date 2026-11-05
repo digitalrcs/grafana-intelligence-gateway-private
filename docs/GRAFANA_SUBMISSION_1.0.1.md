@@ -1,3 +1,5 @@
+> Historical public-edition record. This is not a private release or current deployment instruction. See [Private release](PRIVATE_RELEASE.md).
+
 # Grafana catalog submission - version 1.0.1
 
 Use the published, tagged release assets below to update the Grafana submission. This release includes the refreshed catalog README, DigitalRCS branding, and a genuine LM Studio assessment screenshot. The panel still requires the separately distributed Intelligence Gateway Secure AI data source.

@@ -1,3 +1,5 @@
+> Historical public-edition record. This is not a private release or current deployment instruction. See [Private release](PRIVATE_RELEASE.md).
+
 # Grafana Intelligence Gateway 1.0.0
 
 Initial catalog-review release of the DigitalRCS Grafana Intelligence Gateway panel.

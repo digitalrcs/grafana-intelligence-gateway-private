@@ -1,0 +1,3 @@
+# Private development
+
+Work only in the internal-edition repository [https://github.com/digitalrcs/grafana-intelligence-gateway-private](https://github.com/digitalrcs/grafana-intelligence-gateway-private). Keep public-edition changes in the separate public project. Follow [development instructions](https://github.com/digitalrcs/grafana-intelligence-gateway-private/blob/main/docs/DEVELOPMENT.md), [Docker setup](Docker-Private.md) and [private signing](Private-Signing-and-Deployment.md). CI uses synthetic fixtures; the shared local demo uses live LM Studio. There is no automatic public release workflow.

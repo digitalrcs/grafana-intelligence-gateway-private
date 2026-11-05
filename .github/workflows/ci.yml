@@ -92,9 +92,7 @@ jobs:
             echo "has-e2e=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Sign plugin
-        run: npm run sign
-        if: ${{ env.GRAFANA_ACCESS_POLICY_TOKEN != '' }}
+      # Private signatures are created explicitly for the target internal root URLs, not in generic CI.
 
       - name: Get plugin metadata
         id: metadata

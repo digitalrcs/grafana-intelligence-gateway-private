@@ -1,3 +1,5 @@
+> Historical public-edition record. This is not a private release or current deployment instruction. See [Private release](PRIVATE_RELEASE.md).
+
 # Grafana catalog submission - version 1.0.0
 
 Historical release record. For the current release, see [Grafana catalog submission](GRAFANA_SUBMISSION.md).
