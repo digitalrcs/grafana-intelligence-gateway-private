@@ -27,11 +27,11 @@ In a second terminal:
 docker compose up
 ```
 
-Open <http://localhost:3004>. Compose mounts both plugins, provisions **DEMO ONLY - Mock AI (no inference)** and a sample dashboard, and starts a credential-free mock provider. This supplied default returns a fixed connectivity receipt: no model runs and no data or image analysis occurs. The dashboard introduction describes the supplied default; read the analysis panel's current AI connection label after changing providers. Follow the [two-phase quickstart](https://github.com/digitalrcs/grafana-intelligence-gateway-private/wiki/Reviewer-Walkthrough#phase-2-connect-a-real-provider) to create a separate real-provider instance. Keep the mock for automated tests.
+Open <http://localhost:3004>. Compose mounts both plugins and supplies an unconfigured starter dashboard. Configure a real Secure AI data-source instance, select it and an approved model under **1. Connect AI**, and add the intended measurements separately under **Queries**. No mock AI server, canned response provider or automatic model choice is bundled. Follow [Panel setup](SETUP.md).
 
 The development container enables anonymous Admin access. Do not use that configuration for a production deployment.
 
-The sample dashboard uses the synthetic [traffic-shift fixture](../testdata/reviewer-traffic.csv). Run `npm run sync:test-data` after replacing the fixture, then restart Grafana. The script embeds the CSV into Grafana TestData's **CSV Content** query and updates the dashboard time range. The original `testdata/datasource.csv` is preserved separately.
+Synthetic traffic-shift and capture dashboards belong to the isolated automated test fixtures. `npm run sync:test-data` updates those fixtures from `testdata/reviewer-traffic.csv`; it does not turn the user starter dashboard into a demo or configure an AI connection.
 
 For LM Studio on the Docker Desktop host, use `http://host.docker.internal:1234/v1`; container `localhost` means the Grafana container. Another host requires an address reachable from Grafana, approved LM Studio network access, and firewall routing. Prefer HTTPS; any HTTP exception must be explicitly enabled in the companion and confined to a trusted environment. The exception does not bypass model, redirect, payload, timeout, or other network policy.
 
@@ -45,11 +45,11 @@ npm run build
 npm run e2e
 ```
 
-E2E tests require the provisioned Grafana and mock provider to be running. Use the multi-version GitHub Actions matrix for compatibility checks.
+Browser tests use a dedicated Grafana instance and isolated synthetic fixtures. Temporary request interception in the test harness verifies UI behavior without providing an installed fake AI service. Those checks do not prove real inference, provider authentication or vision quality. Unit-test mocks remain test-only. See the test configuration for the separately opt-in live-provider checks; use approved synthetic evidence and a configured real provider for that validation.
 
-Image tests require version-compatible builds of both repositories (1.1.0 or later). The provisioned `review-model` is explicitly vision-enabled only for the deterministic mock; its image-count receipt proves transport, not visual understanding. Tests cover preview without inference, selected/dashboard capture, upload, explicit submission, exclusion of Intelligence Gateway panels, cancellation, clear, and checkbox-label alignment at desktop and narrow sizes. Validate data-only, images-only with no query results, and combined requests separately. Follow [Image Analysis](IMAGE_ANALYSIS.md) for limits and provider setup.
+Image tests require version-compatible builds of both repositories (1.1.0 or later). Tests cover preview without inference, selected/dashboard capture, upload, explicit submission, exclusion of Intelligence Gateway panels, cancellation, clearing and layout. Check data-only, images-only and combined requests separately. New frozen-snapshot checks must verify original data/images are reused after refresh, and that Clear analysis and connection changes discard them. Follow [Image Analysis](IMAGE_ANALYSIS.md) for limits and provider setup.
 
-Use the compatible companion revision selected by the CI/release workflow. Do not pair panel 1.1.0 with the pre-image 1.0.1 backend or skip tests to make an incompatible pair appear supported. Run the multi-version matrix against the release pair before claiming supported-version compatibility. Never point the full E2E suite at an instance configured to call a real provider; use the dedicated mock environment. Preview-only regression checks can be selected separately and must block inference requests.
+Use the compatible companion revision selected by CI. Do not skip tests to make incompatible builds appear supported. Keep routine isolated browser tests separate from live-provider validation; interception cannot establish upstream model quality. Preview-only checks must verify that preparing a capture does not trigger inference. Run the compatibility matrix against the exact proposed release pair before claiming support.
 
 The webpack build packages **`src/README.md`** as `dist/README.md`; the root README is the repository landing page. Keep their product descriptions consistent. Catalog screenshots and SVG plugin icons are copied from the paths declared in `src/plugin.json`. Restart Grafana after changes to plugin metadata.
 
@@ -76,7 +76,7 @@ npm run sign
 
 Follow [Private signing and deployment](PRIVATE_RELEASE.md). Keep source tags and signed release artifacts immutable. This edition is not intended for the public Grafana catalog; that separate edition removes cross-panel DOM capture. Source publication does not establish private signing or deployment approval.
 
-The [reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-gateway-private/wiki/Reviewer-Walkthrough) and [live evidence](LIVE_REVIEW_EVIDENCE.md) describe the synthetic scenario, deterministic mock, and real-provider checks.
+The [reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-gateway-private/wiki/Reviewer-Walkthrough) and [live evidence](LIVE_REVIEW_EVIDENCE.md) describe real-provider review; historical evidence is labeled with its version and does not validate the current build.
 
 ## Source map
 
@@ -86,6 +86,9 @@ The [reviewer walkthrough](https://github.com/digitalrcs/grafana-intelligence-ga
 - `src/utils/aiClient.ts`: secure data-source transport and response/error handling.
 - `src/utils/dataFrames.ts`: bounded serialization of panel query data.
 - `src/utils/prompt.ts`: prompt-template construction.
+- `src/utils/evidence.ts`: bounded evidence, statistics, baseline comparisons and incident briefs.
+- `src/utils/presets.ts`: built-in analysis task instructions.
+- `src/components/AssessmentTools.tsx`: evidence details, export and frozen follow-up controls.
 - `src/module.ts`: panel option registration.
 - `provisioning/dashboards/dashboard.json`: local development dashboard.
 - `examples/dashboard.json`: importable configuration example.
@@ -95,6 +98,6 @@ See [Contributing](../CONTRIBUTING.md) and [Security](../SECURITY.md).
 
 ## Tall-dashboard capture regression
 
-The tall-dashboard test in `tests/vision.spec.ts` uses the separate `vision-tall.json` dashboard with eight synthetic charts. It checks every chart cell for rendered green trace pixels, nonzero scroll restoration, gateway exclusion, and no inference request during preview. CI always includes Grafana 12.4.0 and 13.3.0 alongside dynamically resolved versions.
+The tall-dashboard test in `tests/vision.spec.ts` uses the isolated `vision-tall.json` test dashboard with eight synthetic charts. It checks every chart cell for rendered green trace pixels, nonzero scroll restoration, gateway exclusion, and no inference request during preview. CI always includes Grafana 12.4.0 and 13.3.0 alongside dynamically resolved versions.
 
 Run with `GRAFANA_VERSION=12.4.0 ANONYMOUS_AUTH_ENABLED=false docker compose up -d --build`, then `npm run e2e -- tests/vision.spec.ts --grep "tall dashboard"`. Use fresh disposable storage when changing Grafana versions; do not downgrade a saved database.

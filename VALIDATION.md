@@ -1,14 +1,28 @@
-# Edition split verification — 2026-11-05
+# Private feature validation — November 5, 2026
 
-Version: 1.2.0-private.1; local development candidate, not signed or published.
+Version: **1.2.0-private.2**, unsigned internal development build. Public source; private Grafana signing and deployment approval remain pending.
 
-- TypeScript checks passed.
-- ESLint: no errors; 11 existing API-deprecation warnings.
-- Unit tests: 96 passed.
-- Production webpack build passed. Built plugin.json version verified.
-- Existing plugin ID retained. One edition per Grafana instance.
-- No remote pushes, commits, tags or catalog submissions performed. The private build was deployed to the existing localhost Docker demo.
+- TypeScript, production webpack build and edition guard passed.
+- ESLint: 0 errors, 12 Grafana API-deprecation warnings.
+- Unit tests: **120 passed across 13 suites**.
+- Full browser workflow run: **19 passed**, including authentication, actual LM Studio data/image assessments and frozen follow-ups, presets, stale evidence, Markdown export, clean setup, image upload, selected/dashboard capture, desktop/narrow labels, and tall-dashboard pixel/scroll restoration.
+- After the setup-link API compatibility correction, the focused setup/assessment browser run passed 3 checks (including authentication); root and subpath link unit tests also passed.
+- Live verification used the existing LM Studio connection and its configured model with synthetic DC1/DC2 measurements. Four actual requests completed: data assessment, data follow-up, captured-image assessment, image follow-up. The image follow-up sent identical original image bytes; query count stayed unchanged after initial loading. This verifies the tested transport/workflow, not independent model reasoning accuracy or a universal zero-query guarantee.
+- The other browser tests use disposable backend-response fixtures scoped to the browser. No simulator service, mock provider configuration, default model, or canned-response runtime is bundled. New installations require an actual AI connection and explicitly selected model.
+- Docker on localhost:3001 is healthy: Grafana Enterprise 13.3.0 with panel 1.2.0-private.2. Existing storage and customized dashboards were retained; tests created and removed separately named synthetic resources.
+- Running and built module.js SHA256 match: `293e99357b3409955d7d3a1333d2a6441e59f803ff25ad6545d2e6803f7307cf`.
+- Dependency audit high-severity gate passed: 0 high/critical; 7 low and 16 moderate dependency findings remain.
 
-Docker was started and Grafana 13.3.0 confirmed private panel 1.2.0-private.1. Live LM Studio text and image requests and exporter PNG download passed. A visual check found intermittent blank dashboard content; a bounded 400 ms quiet interval followed by paint frames was added before capture, with cancellation and mutation regression tests. See ../local-updates/private-docker-20261105/ for browser evidence and repeat results. These checks use synthetic demo data; they are not production approval.
+## Scope and limitations
 
-Full capture and image controls are retained from commit 54eea10b15167d6917203295979fc9ba63b6f0ba, with the new render-settling wait. Public release workflow removed; origin push disabled. Private signing correctly refused missing URL/credential configuration; no signing request was sent. The current dist is an unsigned private development build; historical signed releases remain in release evidence.
+Browser plugin was not available; validation used the repository's @grafana/plugin-e2e Playwright workflow on Chromium, with desktop and 390px capture-layout coverage. Browser identity/content, uncaught errors, captures, request counts and explicit-send behavior were checked. Known optional Grafana missing-configuration diagnostics are narrowly classified in tests.
+
+Evidence summaries describe submitted samples and supplied row order. Missing-value counts do not infer absent timestamps. Counter increases require usable adjacent samples and valid increasing times when supplied. Baseline comparison uses two existing query results; it does not retrieve history. Image freshness cannot detect changes to other panels' pixels without a new capture. Follow-ups reuse the frozen data/images and do not recapture.
+
+Local evidence is in `../local-updates/private-features-20261105/` outside the source repository. No production endpoints, customer data, access tokens, private signatures or release artifacts were published.
+
+## Reproduce
+
+Run `npm run typecheck`, `npm run lint`, `npm run test:ci`, and `npm run build`. Rebuild the maintained shared Docker stack with `Start-Demo.ps1 -RebuildPanel`.
+
+Run `npx playwright test --workers=1` with `GRAFANA_URL` pointing to the intended local instance. Ordinary tests create disposable synthetic resources. The live test runs only when both `LIVE_AI_DATASOURCE_UID` and `LIVE_AI_MODEL` explicitly select the approved real connection/model; it uses synthetic data and removes its dashboard/data source afterward. `VISION_EVIDENCE_DIR` optionally saves screenshots outside this repository.

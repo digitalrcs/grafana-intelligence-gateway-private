@@ -1,4 +1,4 @@
-> Private internal edition. Current development version: 1.2.0-private.1. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
+> Private internal edition. Current development version: 1.2.0-private.2. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
 
 # Prompt Engineering Guide
 

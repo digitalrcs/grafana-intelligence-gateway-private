@@ -1,4 +1,4 @@
-> Private internal edition. Current development version: 1.2.0-private.1. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
+> Private internal edition. Current development version: 1.2.0-private.2. See [Private signing](Private-Signing-and-Deployment.md) for deployment status.
 
 # Security Considerations
 
@@ -15,3 +15,9 @@ Copilot Studio's Direct Line preview uses a secured channel, not the dashboard v
 Administrators remain responsible for provider terms, data retention/residency, personal data, outbound endpoints, key scope, quotas, and user access. The companion data source adds `secureJsonData`, provider/model policy, timeouts, payload caps, logging controls, redirect blocking, and server-side rate limits. Network egress policy and provider budgets remain important independent controls.
 
 See [Secure Backend and Secret Storage](Secure-Backend-and-Secrets.md) for installation, provisioning, enforced policies, and the reason a panel cannot directly read another data source's decrypted secrets.
+
+## Frozen snapshots and exports
+
+Successful assessments retain the submitted prompt, bounded query evidence, conversation and any submitted images in browser memory for explicit follow-ups. These follow-ups resend the original evidence to the provider; they do not fetch current measurements or recapture panels. Clear analysis, replacement, navigation/unmount or connection/model changes discard the snapshot. Provider retention policies still apply to every submitted request.
+
+Incident briefs contain model output and source metadata, which can be sensitive even with raw evidence excluded. Raw query evidence and image bytes are separate export opt-ins. Exported files and clipboard copies are user-managed and cannot be retracted by Clear analysis. Review the contents before sharing.

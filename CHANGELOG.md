@@ -1,3 +1,12 @@
+# Private edition analysis workflow (unreleased)
+
+- Add evidence summaries, query/time/settings freshness detection, analysis presets and calculated sample statistics with explicit numeric semantics.
+- Add supplied-query baseline comparison, Markdown incident briefs and frozen follow-ups that reuse original data and images without recapture or an extra query.
+- Keep image bytes in memory for explicit follow-ups; exclude raw query evidence and images from exports by default, with separate opt-ins.
+- Retain private dashboard and selected-panel capture. Capture freshness cannot observe all later changes to other panels without recapturing.
+- Remove bundled mock AI server/configuration and preselected model defaults. New panels and the starter dashboard require a real Secure AI connection and approved model.
+- Keep test doubles isolated to automated tests; they do not establish actual provider quality.
+
 # Private edition split (unreleased)
 
 - Wait for a quiet render interval and two paint frames before capturing scrolled panels; abort and time bounds remain enforced.

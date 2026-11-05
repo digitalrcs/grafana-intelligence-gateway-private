@@ -1,6 +1,8 @@
 # Grafana Intelligence Gateway — Private
 
-This wiki documents the private internal edition for internal deployments. The internal-edition repository is [https://github.com/digitalrcs/grafana-intelligence-gateway-private](https://github.com/digitalrcs/grafana-intelligence-gateway-private). Current development build: **1.2.0-private.1**, unsigned; private signing and deployment approval remain pending.
+This wiki documents the private internal edition for internal deployments. The internal-edition repository is [https://github.com/digitalrcs/grafana-intelligence-gateway-private](https://github.com/digitalrcs/grafana-intelligence-gateway-private). Current development build: **1.2.0-private.2**, unsigned; private signing and deployment approval remain pending.
+
+Connect an approved real AI provider; there is no bundled mock AI service or fallback. The analysis workflow adds evidence/freshness, presets, calculated sample statistics, incident briefs, supplied-data baseline comparisons and frozen follow-ups. See [Panel setup](Panel-Setup-and-Configuration.md).
 
 The full feature set is retained: query-data analysis, dashboard and selected-panel capture, PNG/JPEG uploads, previews and explicit image submission. Use the Dashboard data source to reuse another panel's results. Captures do not deliberately refresh queries, but lazy panels and scheduled refreshes can still load data. Never infer a universal no-query guarantee from the successful local test.
 

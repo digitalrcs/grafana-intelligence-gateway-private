@@ -2,7 +2,7 @@
 
 Image analysis adds visual context to an Intelligence Gateway assessment. Capture the dashboard, choose individual panels, or attach PNG/JPEG images, review the previews, and explicitly send them to a vision-capable model through the required secure data source.
 
-This guide covers panel **1.1.0**, which requires companion data source **1.1.0 or later**. Version 1.0.1 predates image support. Check both release notes before upgrading, install the companion first, and restart Grafana after installation. Copilot Studio has a bounded **Direct Line preview adapter**, not an SSO integration or a tenant-certified connection; see [enterprise integration notes](../wiki/Copilot-Studio-Notes.md). The Current View Exporter plugin does not need to be installed.
+This guide covers the private internal edition, which requires an image-compatible companion data source **1.1.0 or later**; deploy a maintained security-fixed companion release. Version 1.0.1 predates image support. Check both release notes before upgrading, install the companion first, and restart Grafana after installation. Copilot Studio has a bounded **Direct Line preview adapter**, not an SSO integration or a tenant-certified connection; see [enterprise integration notes](wiki/Copilot-Studio-Notes.md). The Current View Exporter plugin does not need to be installed.
 
 ## Choose the evidence
 
@@ -12,7 +12,7 @@ This guide covers panel **1.1.0**, which requires companion data source **1.1.0 
 | **Images only**     | No query results or Dashboard source are required.        | Turn **Include query data with images** off, prepare previews, choose **Use images**, then **Analyze images**. | Prompt, image labels/metadata, and the reviewed images.              |
 | **Data and images** | Connect the query results needed for precise values.      | Leave **Include query data with images** on; prepare previews and explicitly select **Analyze images**.        | Prompt, this panel's bounded query context, and the reviewed images. |
 
-Every mode requires **AI provider → Secure AI data source**. That is the model connection, not the panel's **Queries** data source. Choosing the secure AI instance does not automatically import other panels' measurements. Images-only assessment works even when **When no data arrives** is set to **Block**, provided images are attached.
+Every mode requires **1. Connect AI → Secure AI data source**. That is the model connection, not the panel's **Queries** data source. Choosing the secure AI instance does not automatically import other panels' measurements. Images-only assessment works even when **When no data arrives** is set to **Block**, provided images are attached.
 
 ## Before you start
 
@@ -38,7 +38,7 @@ Every mode requires **AI provider → Secure AI data source**. That is the model
 6. Set the assessment prompt and select **Analyze images**. Only this explicit action submits the prepared images with the request.
 7. Review the response against the original charts. Models can misread axes, units, small text, legends, or missing data. Treat numerical estimates from pixels as estimates, not as a substitute for the underlying measurements.
 
-**Clear analysis** cancels an active request and removes the displayed assessment, errors, and all pending images without changing source measurements. Use an image's **Remove** button or **Remove all images** to discard staged images without sending them. After a successful image assessment, attachments are released; capture or attach again for a subsequent image request. Auto-analysis pauses while the image dialog is open or attachments are present, and never submits images automatically.
+**Clear analysis** cancels an active request and removes the displayed assessment, errors, and all pending images without changing source measurements. Use an image's **Remove** button or **Remove all images** to discard staged images without sending them. After a successful image assessment, the pending attachment tray clears. Submitted images remain only in the frozen in-memory snapshot for explicit follow-ups. Clear analysis, replacement, navigation/unmount or a provider/model change discards them. Auto-analysis pauses while the image dialog is open or attachments are present, and never submits images automatically.
 
 The existing prompt and query-data settings continue to apply. Capturing another panel adds its rendered image; it does not fetch that panel's underlying DataFrames. Continue using Grafana's **Dashboard** data source when the assessment also needs another panel's query data.
 
@@ -133,7 +133,7 @@ The agent owns its model, instructions, temperature, output-token policy, and to
 
 The preview adapter requires bot replies with the submitted activity's `replyToId` and an explicit readiness hint (`acceptingInput` or `expectingInput`), or a correlated `endOfConversation`. It collects text until that signal and fails rather than presenting an early progress message as a completed answer. Microsoft notes that Direct Line has no universal final-response marker; this deliberately narrower compatibility contract must be tested against the published agent. OAuth/sign-in cards report unsupported interactive authentication; absent completion signals, expired tokens, empty/non-text output, and timeouts are separate failure cases. See [Microsoft's response-correlation guidance](https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/conversational-agents-performance-testing-direct-line).
 
-The adapter has deterministic protocol/mock coverage, not a live enterprise-tenant validation or certification. File uploads and the approved channel must be enabled on the agent. Follow [Copilot Studio Notes](../wiki/Copilot-Studio-Notes.md) for exact setup, supported regions, limitations, and delegated-auth options still awaiting implementation and tenant approval.
+The adapter has deterministic protocol-test coverage, not a live enterprise-tenant validation or certification. File uploads and the approved channel must be enabled on the agent. Follow [Copilot Studio Notes](wiki/Copilot-Studio-Notes.md) for exact setup, supported regions, limitations, and delegated-auth options still awaiting implementation and tenant approval.
 
 ## Reasoning, answer length, and deadlines
 
@@ -147,14 +147,22 @@ Timeout and output-budget failures are different. Use the most restrictive appli
 
 Pending images live in browser memory and are not saved in dashboard JSON or browser persistent storage. Capture, upload selection, preview, and **Use images** do not submit them to the AI provider. **Analyze images** sends the images, prompt, and configured query context through the secure companion. Once sent, the provider's retention, logging, and deletion policies apply; **Clear analysis** cannot retract a submitted request or delete upstream copies.
 
-Do not include secrets in screenshots. Do not authorize a production rollout based only on a successful connection test. Validate with synthetic, non-sensitive images that have known visual facts, then verify the model actually describes those facts. Deterministic/mock and contract tests prove payload handling and controls, not visual understanding. A text-model completion or a successful model-list request is not evidence of vision support.
+Do not include secrets in screenshots. Do not authorize a production rollout based only on a successful connection test. Validate with synthetic, non-sensitive images that have known visual facts, then verify the model actually describes those facts. Automated contract tests prove payload handling and controls, not visual understanding. A text-model completion or a successful model-list request is not evidence of vision support.
 
 Capture errors, model-policy rejections, unsupported image/model responses, timeout, and output truncation should be investigated separately. Record the provider/app/model versions, image count and dimensions, configured limits, and sanitized error—not image bytes, credentials, or confidential prompt content. Images and model output are untrusted content; an assessment is not authorization to execute instructions found inside an image.
 
-For a managed enterprise deployment, follow [Copilot Studio and enterprise authentication notes](../wiki/Copilot-Studio-Notes.md) before considering Microsoft agent integration. No tenant-specific permission, data-sharing approval, or Copilot connectivity is implied by this feature.
+For a managed enterprise deployment, follow [Copilot Studio and enterprise authentication notes](wiki/Copilot-Studio-Notes.md) before considering Microsoft agent integration. No tenant-specific permission, data-sharing approval, or Copilot connectivity is implied by this feature.
 
 ## Grafana 12.4 dashboard capture
 
 Use panel 1.1.2 or later for tall dashboards on Grafana 12.4.0. This fixes document scrolling so lower panels can be visited. A stalled scroll reports an error instead of producing an incomplete image. Existing size limits and partial-capture warnings still apply. Companion 1.1.0 or later remains required; updating Current View Exporter alone does not update this panel.
 
 Active capture survives temporary panel unmounting during dashboard scrolling (including Grafana 12.2). Navigation or a provider/model change cancels the capture. An unclaimed result is discarded five seconds after capture finishes; active sessions have a 70-second outer cleanup limit. Images remain only in browser memory and still require explicit review and submission.
+
+## Frozen evidence, freshness and sharing
+
+After a successful image assessment, the original prompt, selected query evidence and submitted images form an in-memory snapshot. Explicit follow-ups reuse that evidence, even if Grafana independently refreshes the dashboard; they do not recapture images or query historical data. Each follow-up sends the original images again to the configured provider, so provider limits and retention policies still apply.
+
+Evidence details and exported briefs identify the submitted images and their capture/upload metadata. Statistics are computed from supplied query values, not image pixels. Query/time/settings changes and newly prepared images can mark the assessment out of date. A capture alone cannot detect every later pixel change in another panel; recapture and select **Analyze images** for an updated visual assessment. **Analyze latest data** starts a fresh assessment using current data and any currently prepared attachments; prepare a new capture first for updated visual evidence. It never silently recaptures the dashboard.
+
+Incident briefs exclude raw query evidence and image bytes by default. Enable each separately only when appropriate for the destination; exported files and clipboard contents are user-managed copies. Clear analysis cannot retract those copies or content already sent to the provider. See [Panel setup](SETUP.md) for the full workflow.

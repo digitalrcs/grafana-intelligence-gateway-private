@@ -33,11 +33,11 @@ The source panel can use Prometheus, Loki, SQL, InfluxDB, Elasticsearch, TestDat
 5. In **Use results from panel**, select the source panel, for example `Server CPU by host`.
 6. Choose whether to include the source panel's transformations when Grafana presents that option.
 7. Select **Refresh** or **Run queries**. The Intelligence Gateway should no longer show the no-data notice.
-8. Under **Data context**, configure:
+8. Under **5. Advanced prompts and limits**, configure:
    - **Recent rows per frame**: number of newest rows included from each DataFrame.
    - **Maximum context characters**: hard request-size cap.
-   - **Source panel title or ID (hint)**: optional text added to the prompt; this does not create the connection.
-9. Select the required secure AI data source, then configure the model, prompt, and skills context.
+   Under **2. Choose evidence**, set **Source panel title or ID (hint)** if desired. This label does not create the connection. Select numeric semantics and optional baseline comparison here.
+9. Under **1. Connect AI**, select the secure AI data source and model. Under **3. Analysis task**, select a preset and optional skills context.
 10. Select **Analyze**, then save the dashboard.
 
 ## What the plugin sends
@@ -131,7 +131,11 @@ Check the prompt preview and query inspector. The field may have been removed by
 
 - The source must be on the same dashboard.
 - The source-title/ID hint is prompt metadata only.
-- The plugin does not use private runtime APIs to scrape other panels.
+- Query data sharing uses Grafana's Dashboard data source. The private edition separately uses DOM capture for images; capturing a panel does not import its underlying query rows.
 - Dashboard data is sent through the selected secure AI data source; apply your organization's data-handling, retention, and access policies.
 
 Official Grafana reference: [Share query results with another panel](https://grafana.com/docs/grafana/latest/visualizations/panels-visualizations/query-transform-data/share-query/).
+
+## Snapshots, statistics and baselines
+
+The Evidence section records the submitted time range, source and included/omitted row counts. Statistics describe retained samples only. Baseline comparison uses two supplied query reference IDs; it does not retrieve a historical window automatically. Frozen follow-ups reuse the submitted evidence without requesting new measurements. See [Panel setup](SETUP.md) for numeric semantics, sampling limits and baseline setup.

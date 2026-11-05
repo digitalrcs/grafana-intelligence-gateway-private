@@ -1,11 +1,12 @@
-import { test, expect, Dashboard, gte } from '@grafana/plugin-e2e';
+import { test, expect, Dashboard, gte } from './fixtures';
 import type { Page, Request, TestInfo } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { writeFile } from 'node:fs/promises';
 
 // Browser plugin not available in the validation environment. Exercise the real
-// Grafana/backend transport with @grafana/plugin-e2e and the synthetic mock provider.
+// Grafana capture UI with @grafana/plugin-e2e and browser-only response fixtures.
+// Real inference is tested separately in live-backend.spec.ts; no simulator is shipped.
 test.setTimeout(120000);
 test.use({ viewport: { width: 1440, height: 1000 }, screenshot: 'only-on-failure' });
 test.beforeEach(async ({ page, grafanaVersion, selectors }) => {
@@ -35,7 +36,7 @@ type VisionDashboard = Dashboard & {
   panels: Array<{ type: string; title: string; options?: { secureDataSourceUid?: string } }>;
 };
 
-type MissingConfigProbe = { kind: 'public-dashboard' } | { kind: 'saved-queries'; resourceName: string };
+type MissingConfigProbe = { kind: 'public-dashboard' } | { kind: 'user-storage'; resourceName: string };
 type CoreDiagnostic = {
   message: string;
   source: string;
@@ -55,9 +56,9 @@ function missingConfigProbe(source: string, origin: string, method: string, stat
       return { kind: 'public-dashboard' };
     }
     const storage = decodeURIComponent(url.pathname).match(
-      /^\/apis\/userstorage\.grafana\.app\/v0alpha1\/namespaces\/default\/user-storage\/(saved-queries:[A-Za-z0-9_-]+)$/
+      /^\/apis\/userstorage\.grafana\.app\/v0alpha1\/namespaces\/default\/user-storage\/((?:saved-queries|grafana-page-history):[A-Za-z0-9_-]+)$/
     );
-    return storage ? { kind: 'saved-queries', resourceName: storage[1] } : null;
+    return storage ? { kind: 'user-storage', resourceName: storage[1] } : null;
   } catch {
     return null;
   }
@@ -73,8 +74,9 @@ function isDocumentedMissingConfig(probe: MissingConfigProbe, body: unknown): bo
   if (probe.kind === 'public-dashboard') {
     return value.statusCode === 404 && value.messageId === 'publicdashboards.notFound';
   }
-  // UserStorage.init treats a missing per-user configuration as an empty store:
-  // https://github.com/grafana/grafana/blob/v13.2.4/packages/grafana-runtime/src/utils/userStorage.tsx
+  // UserStorage.fetchResource returns null on 404; init/getItem use an empty store
+  // or local fallback for these optional saved-query and page-history settings.
+  // https://github.com/grafana/grafana/blob/v13.3.0/packages/grafana-runtime/src/utils/userStorage.tsx
   const details = value.details as Record<string, unknown> | undefined;
   return (
     value.kind === 'Status' &&
@@ -209,6 +211,7 @@ test('optional host configuration diagnostics require an exact origin, request, 
   const publicPath = '/api/dashboards/uid/synthetic-dashboard/public-dashboards';
   const storagePath =
     '/apis/userstorage.grafana.app/v0alpha1/namespaces/default/user-storage/saved-queries:synthetic-user';
+  const historyPath = storagePath.replace('saved-queries:', 'grafana-page-history:');
   const publicBody = { statusCode: 404, messageId: 'publicdashboards.notFound' };
   const storageBody = {
     kind: 'Status',
@@ -218,9 +221,14 @@ test('optional host configuration diagnostics require an exact origin, request, 
     reason: 'NotFound',
     details: { name: 'saved-queries:synthetic-user', group: 'userstorage.grafana.app', kind: 'user-storage' },
   };
+  const historyBody = {
+    ...storageBody,
+    details: { ...storageBody.details, name: 'grafana-page-history:synthetic-user' },
+  };
   for (const [pathname, body] of [
     [publicPath, publicBody],
     [storagePath, storageBody],
+    [historyPath, historyBody],
   ] as const) {
     const source = `${origin}${pathname}`;
     const probe = missingConfigProbe(source, origin, 'GET', 404)!;
@@ -233,6 +241,10 @@ test('optional host configuration diagnostics require an exact origin, request, 
     expect(missingConfigProbe(source, 'https://other.example.test', 'GET', 404)).toBeNull();
     expect(missingConfigProbe(`${source}?unexpected=true`, origin, 'GET', 404)).toBeNull();
   }
+  const history = missingConfigProbe(`${origin}${historyPath}`, origin, 'GET', 404)!;
+  expect(isDocumentedMissingConfig(history, storageBody)).toBe(false);
+  expect(isDocumentedMissingConfig(history, { ...historyBody, reason: 'Forbidden' })).toBe(false);
+  expect(isDocumentedMissingConfig(history, { ...historyBody, code: 500 })).toBe(false);
   const storage = missingConfigProbe(`${origin}${storagePath}`, origin, 'GET', 404)!;
   expect(
     isDocumentedMissingConfig(storage, { ...storageBody, details: { ...storageBody.details, name: 'other' } })
@@ -241,6 +253,8 @@ test('optional host configuration diagnostics require an exact origin, request, 
     '/api/plugins/grafana-assistant-app/resources/api/v1/ofrep/v1/evaluate/flags',
     '/api/datasources/uid/secure-ai/resources/chat/completions',
     storagePath.replace('saved-queries:', 'other-service:'),
+    historyPath.replace('grafana-page-history:', 'grafana-page-history-extra:'),
+    historyPath.replace('/namespaces/default/', '/namespaces/other/'),
     publicPath.replace('/public-dashboards', ''),
   ]) {
     expect(missingConfigProbe(`${origin}${pathname}`, origin, 'GET', 404)).toBeNull();
@@ -282,7 +296,7 @@ test('image panel checkbox labels stay adjacent and wrap on desktop and narrow s
   await panel.getByRole('button', { name: 'Images', exact: true }).click();
   const dialog = page.getByTestId('image-inputs');
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole('checkbox', { name: /Purpose:|Default mode: MOCK/ })).toHaveCount(0);
+  await expect(dialog.getByRole('checkbox', { name: /Purpose:|Configure an actual AI connection/ })).toHaveCount(0);
 
   for (const viewport of [
     { width: 1440, height: 1000 },
@@ -329,7 +343,7 @@ test('image panel checkbox labels stay adjacent and wrap on desktop and narrow s
       expect(geometry.rowLeft).toBeGreaterThanOrEqual(0);
       expect(geometry.rowRight).toBeLessThanOrEqual(viewport.width);
       // Require wrapping only when the fixture has a long text-panel heading.
-      // Short mock-demo headings can fit; adjacency and overflow checks still apply.
+      // Short fixture headings can fit; adjacency and overflow checks still apply.
       if (viewport.width === 390 && source.type === 'text' && source.title.length > 40) {
         expect(geometry.lineCount).toBeGreaterThan(1);
       }
@@ -383,7 +397,7 @@ test('text panel capture labels contain only its header and submit a bounded ima
   await evidence(page, info, 'vision-text-panel-labels');
   const choice = dialog.getByRole('checkbox', { name: textPanel.title, exact: true });
   await expect(choice).toBeVisible();
-  await expect(dialog.getByRole('checkbox', { name: /Purpose:|Default mode: MOCK/ })).toHaveCount(0);
+  await expect(dialog.getByRole('checkbox', { name: /Purpose:|Configure an actual AI connection/ })).toHaveCount(0);
   await choice.check({ force: true });
   await dialog.getByRole('button', { name: 'Capture selected panels', exact: true }).click();
   const preview = dialog.getByTestId('image-preview');
@@ -395,13 +409,13 @@ test('text panel capture labels contain only its header and submit a bounded ima
   await dialog.getByRole('button', { name: 'Use images', exact: true }).click();
   expect(observed.inference).toHaveLength(0);
   await panel.getByRole('button', { name: 'Analyze images', exact: true }).click();
-  await expect(panel).toContainText('Image transport receipt: 1 image(s) received.', { timeout: 30000 });
+  await expect(panel).toContainText('Image request: 1 image(s) received.', { timeout: 30000 });
   expect(observed.inference).toHaveLength(1);
   const sentImages = observed.inference[0].postDataJSON().images;
   expect(sentImages).toHaveLength(1);
   expect(sentImages[0].name).toBe(textPanel.title);
   expect(Buffer.byteLength(sentImages[0].name, 'utf8')).toBeLessThanOrEqual(256);
-  expect(sentImages[0].name).not.toMatch(/Purpose:|Default mode: MOCK/);
+  expect(sentImages[0].name).not.toMatch(/Purpose:|Configure an actual AI connection/);
   await evidence(page, info, 'vision-text-panel-receipt');
   await assertNoUnexpectedErrors(observed, info);
 });
@@ -455,13 +469,21 @@ test('selected panel preview requires explicit send and clears images with analy
   await expect(dialog).toHaveCount(0);
   expect(observed.inference).toHaveLength(0);
   await panel.getByRole('button', { name: 'Analyze images', exact: true }).click();
-  await expect(panel).toContainText('Image transport receipt: 1 image(s) received.', { timeout: 30000 });
+  await expect(panel).toContainText('Image request: 1 image(s) received.', { timeout: 30000 });
   expect(observed.inference).toHaveLength(1);
   expect(observed.inference[0].postDataJSON().images).toHaveLength(1);
   expect(observed.queryCount()).toBe(queryBaseline);
   await evidence(page, info, 'vision-selected-receipt');
+  await panel.getByText('Ask a follow-up', { exact: true }).click();
+  await panel.getByRole('textbox', { name: 'Follow-up question' }).fill('Describe the original captured chart.');
+  await panel.getByRole('button', { name: 'Ask follow-up', exact: true }).click();
+  await expect(panel).toContainText('1/6 follow-ups used');
+  expect(observed.inference).toHaveLength(2);
+  expect(observed.inference[1].postDataJSON().images).toEqual(observed.inference[0].postDataJSON().images);
+  expect(observed.queryCount()).toBe(queryBaseline);
+
   await panel.getByRole('button', { name: 'Clear analysis', exact: true }).click();
-  await expect(panel).not.toContainText('Image transport receipt:');
+  await expect(panel).not.toContainText('Image request:');
   await expect(panel.getByRole('button', { name: 'Images', exact: true })).toBeVisible();
   await expect(panel.getByRole('button', { name: 'Analyze images', exact: true })).toHaveCount(0);
   await assertNoUnexpectedErrors(observed, info);
@@ -505,7 +527,7 @@ test('dashboard capture previews without sending and excludes intelligence panel
   await dialog.getByRole('button', { name: 'Use images', exact: true }).click();
   expect(observed.inference).toHaveLength(0);
   await panel.getByRole('button', { name: 'Analyze images', exact: true }).click();
-  await expect(panel).toContainText(`Image transport receipt: ${count} image(s) received.`, { timeout: 30000 });
+  await expect(panel).toContainText(`Image request: ${count} image(s) received.`, { timeout: 30000 });
   expect(observed.inference).toHaveLength(1);
   expect(observed.inference[0].postDataJSON().images).toHaveLength(count);
   await assertNoUnexpectedErrors(observed, info);
@@ -550,7 +572,7 @@ test('multiple PNG and JPEG uploads preview, remove, and remain out of saved das
   await dialog.getByRole('button', { name: 'Use images', exact: true }).click();
   expect(observed.inference).toHaveLength(0);
   await panel.getByRole('button', { name: 'Analyze images', exact: true }).click();
-  await expect(panel).toContainText('Image transport receipt: 1 image(s) received.', { timeout: 30000 });
+  await expect(panel).toContainText('Image request: 1 image(s) received.', { timeout: 30000 });
   expect(observed.inference).toHaveLength(1);
   await panel.getByRole('button', { name: 'Clear analysis', exact: true }).click();
   await panel.getByRole('button', { name: 'Images', exact: true }).click();
@@ -574,19 +596,19 @@ test('images-only analysis needs no query source and sends one image only after 
   const dashboard = (await readProvisionedDashboard({ fileName: 'dashboard.json' })) as VisionDashboard;
   const intelligence = dashboard.panels.find((panel) => panel.options?.secureDataSourceUid)!;
   const source = dashboard.panels.find((panel) => panel.type === 'timeseries')!;
-  const mock = await readProvisionedDataSource<{ provider: string; baseUrl: string; defaultModel: string }>({
+  const testSource = await readProvisionedDataSource<{ provider: string; baseUrl: string; defaultModel: string }>({
     fileName: 'intelligence-gateway.yml',
   });
   // Fail before any inference if this test is accidentally pointed at an instance
   // whose provisioned UID has been repurposed for a real provider.
-  expect(mock.jsonData.provider).toBe('custom');
-  expect(mock.jsonData.baseUrl).toMatch(/^http:\/\/mock-ai(?::\d+)?\/v1$/);
-  const currentProvider = await requestAPI.get(`/api/datasources/uid/${mock.uid}`);
+  expect(testSource.jsonData.provider).toBe('custom');
+  expect(testSource.jsonData.baseUrl).toBe('https://inference.invalid/v1');
+  const currentProvider = await requestAPI.get(`/api/datasources/uid/${testSource.uid}`);
   expect(currentProvider.ok()).toBe(true);
   expect((await currentProvider.json()).jsonData).toMatchObject({
-    provider: mock.jsonData.provider,
-    baseUrl: mock.jsonData.baseUrl,
-    defaultModel: mock.jsonData.defaultModel,
+    provider: testSource.jsonData.provider,
+    baseUrl: testSource.jsonData.baseUrl,
+    defaultModel: testSource.jsonData.defaultModel,
   });
 
   // Take a synthetic chart image first; the assessment dashboard below contains
@@ -618,8 +640,8 @@ test('images-only analysis needs no query source and sends one image only after 
         gridPos: { h: 16, w: 24, x: 0, y: 0 },
         options: {
           ...intelligence.options,
-          secureDataSourceUid: mock.uid,
-          model: mock.jsonData.defaultModel,
+          secureDataSourceUid: testSource.uid,
+          model: testSource.jsonData.defaultModel,
           includeDataWithImages: false,
           showImageControls: true,
           showAnalyzeButton: true,
@@ -684,7 +706,7 @@ test('images-only analysis needs no query source and sends one image only after 
     expect(observed.queryCount()).toBe(queryBaseline);
 
     await analyze.click();
-    await expect(panel).toContainText('Image transport receipt: 1 image(s) received.', { timeout: 30000 });
+    await expect(panel).toContainText('Image request: 1 image(s) received.', { timeout: 30000 });
     expect(observed.inference).toHaveLength(1);
     const payload = observed.inference[0].postDataJSON();
     expect(payload.images).toHaveLength(1);
@@ -696,7 +718,7 @@ test('images-only analysis needs no query source and sends one image only after 
     expect(payload.prompt.user).not.toContain('"rows"');
     expect(observed.queryCount()).toBe(queryBaseline);
     await expect(panel).not.toContainText('AI analysis failed');
-    await expect(panel).toContainText('Submitted 1 image. Capture again to assess a newer view.');
+    await expect(panel).toContainText('Submitted 1 image. Original images are kept in this snapshot for follow-ups.');
     await evidence(page, info, 'vision-images-only-receipt');
     await assertNoUnexpectedErrors(observed, info);
   } finally {
@@ -723,7 +745,7 @@ test('secure data source exposes provider-specific credentials and vision policy
   const dataSource = await readProvisionedDataSource({ fileName: 'intelligence-gateway.yml' });
   await gotoDataSourceConfigPage(dataSource.uid);
   await expect(page.getByRole('switch', { name: 'Enable image analysis', exact: true })).toBeChecked();
-  await expect(page.getByRole('textbox', { name: /^Allowed vision models/ })).toHaveValue('review-model');
+  await expect(page.getByRole('textbox', { name: /^Allowed vision models/ })).toHaveValue('test-model');
   console.log('Secure AI data-source settings URL:', page.url());
   const provider = page.getByRole('radiogroup', { name: /^Provider/ });
   await expect(provider.getByRole('radio')).toHaveCount(6);
@@ -739,7 +761,7 @@ test('secure data source exposes provider-specific credentials and vision policy
   await expect(page.getByRole('spinbutton', { name: /^Maximum output tokens/ })).toBeDisabled();
   await expect(page.getByText(/does not perform interactive end-user sign-in/)).toBeVisible();
   await evidence(page, info, 'vision-provider-settings');
-  // Do not save these exploratory form changes or invoke any non-mock provider.
+  // Do not save these exploratory form changes or invoke any provider.
   expect(observed.inference).toHaveLength(0);
   await assertNoUnexpectedErrors(observed, info);
 });
